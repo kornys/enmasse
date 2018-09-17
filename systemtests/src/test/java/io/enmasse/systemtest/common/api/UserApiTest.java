@@ -291,4 +291,43 @@ class UserApiTest extends TestBase {
 
         getUserApiClient().createUser(brokered.getName(), testUser.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
     }
+
+    @Test
+    void testCreateUserHyphenUsername() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-hyphen-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("user-pepinator", "password");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        getUserApiClient().createUser(brokered.getName(), testUser.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+    }
+
+    @Test
+    void testCreateUserMustStartWithChar() throws Exception {
+        AddressSpace brokered = new AddressSpace("user-api-space-hyphen-username", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        createAddressSpace(brokered);
+
+        UserCredentials cred = new UserCredentials("charfirst", "password");
+        User testUser = new User().setUserCredentials(cred).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        getUserApiClient().createUser(brokered.getName(), testUser.toJson(brokered.getName(), "userpepinator"), HTTP_CREATED);
+
+        UserCredentials cred2 = new UserCredentials("-hyphensymbolfirst", "password");
+        User testUser2 = new User().setUserCredentials(cred2).addAuthorization(
+                new User.AuthorizationRule()
+                        .addAddress("*")
+                        .addOperation(User.Operation.RECEIVE));
+
+        assertThrows(ExecutionException.class, () ->
+                getUserApiClient().createUser(brokered.getName(), testUser2.toJson(brokered.getName(), "userpepinator"), HTTP_BAD_REQUEST));
+
+
+    }
 }
