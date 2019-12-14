@@ -1,0 +1,76 @@
+name: IoT
+on: [issue_comment]
+
+jobs:
+  iot-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: listen for PR Comments
+        uses: machine-learning-apps/actions-chatops@master
+        with:
+          TRIGGER_PHRASE: "/test-iot"
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+
+      - name: clone branch of PR
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        uses: actions/checkout@master
+        with:
+          ref: ${{ steps.prcomm.outputs.SHA }}
+
+      - name: Set version
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+
+      - name: setup-docker
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: ./.github/scripts/setup_docker.sh
+
+      - name: Minikube setup with registry
+        uses: EnMasseProject/minikube-setup@V1.0.0
+        with:
+          k8s-version: 1.15.0
+
+      - name: Set up JDK 11
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11.0.2
+
+      - name: Setup Ruby environment with ruby-build
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        uses: clupprich/ruby-build-action@v1.0.0
+
+      - name: Install dependencies
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: ./.github/scripts/install_dep.sh
+
+      - name: Build
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: ./.github/scripts/build.sh
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: unit-test-logs
+          path: artifacts
+
+      - name: IoT tests
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: ./.github/scripts/iot_test.sh
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: smoke-test-logs
+          path: artifacts
