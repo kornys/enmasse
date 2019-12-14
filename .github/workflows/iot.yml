@@ -19,8 +19,8 @@ jobs:
           ref: ${{ steps.prcomm.outputs.SHA }}
 
       - name: Set version
-          run: |
-            echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+        if: steps.prcomm.outputs.TRIGGERED == 'true'
+        run: echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
 
       - name: setup-docker
         if: steps.prcomm.outputs.TRIGGERED == 'true'
