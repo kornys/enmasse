@@ -62,6 +62,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     private CredentialsRegistryClient credentialsClient;
 
     private int numberOfProjects = 2;
+    //nevim
     private List<IoTProjectTestContext> projects = new ArrayList<>();
 
     @BeforeEach
